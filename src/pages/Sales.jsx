@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FileDown, X, Search, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import html2pdf from 'html2pdf.js';
 
 const Sales = () => {
     const [bills, setBills] = useState([]);
@@ -151,6 +152,18 @@ const Sales = () => {
 
         const fileName = `Sales_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
         saveAs(data, fileName);
+    };
+
+    const downloadAsPDF = () => {
+        const element = document.getElementById('bill-content');
+        const opt = {
+            margin: 10,
+            filename: `Bill_${selectedBill.invoiceNumber}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().from(element).set(opt).save();
     };
 
     const getStatusBadge = (status) => {
@@ -347,102 +360,107 @@ const Sales = () => {
 
                         <h2 style={{ marginBottom: '1.5rem' }}>Bill Details</h2>
 
-                        {/* Invoice Header */}
-                        <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '0.5rem' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <div>
-                                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Invoice Number</div>
-                                    <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{selectedBill.invoiceNumber}</div>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Date</div>
-                                    <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                                        {new Date(selectedBill.createdAt).toLocaleDateString()}
+                        <div id="bill-content" style={{ padding: '10px' }}>
+                            {/* Invoice Header */}
+                            <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '0.5rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Invoice Number</div>
+                                        <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{selectedBill.invoiceNumber}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Date</div>
+                                        <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                                            {new Date(selectedBill.createdAt).toLocaleDateString()}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Customer Information */}
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Customer Information</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                <div><strong>Name:</strong> {selectedBill.customerName}</div>
-                                <div><strong>Phone:</strong> {selectedBill.customerPhone}</div>
-                                {selectedBill.customerAddress && (
-                                    <div style={{ gridColumn: '1 / -1' }}><strong>Address:</strong> {selectedBill.customerAddress}</div>
-                                )}
+                            {/* Customer Information */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Customer Information</h3>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                    <div><strong>Name:</strong> {selectedBill.customerName}</div>
+                                    <div><strong>Phone:</strong> {selectedBill.customerPhone}</div>
+                                    {selectedBill.customerAddress && (
+                                        <div style={{ gridColumn: '1 / -1' }}><strong>Address:</strong> {selectedBill.customerAddress}</div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Items */}
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Items</h3>
-                            <table style={{ width: '100%', fontSize: '0.875rem' }}>
-                                <thead>
-                                    <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
-                                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Product</th>
-                                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Packaging</th>
-                                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Cartons</th>
-                                        <th style={{ textAlign: 'right', padding: '0.5rem' }}>Pack Price</th>
-                                        <th style={{ textAlign: 'right', padding: '0.5rem' }}>Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {selectedBill.items.map((item, index) => (
-                                        <tr key={index} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                            <td style={{ padding: '0.5rem' }}>{item.name}</td>
-                                            <td style={{ textAlign: 'center', padding: '0.5rem' }}>
-                                                <span className="badge badge-info">{item.packaging}</span>
-                                            </td>
-                                            <td style={{ textAlign: 'center', padding: '0.5rem' }}>{item.cartonsOrdered}</td>
-                                            <td style={{ textAlign: 'right', padding: '0.5rem' }}>₹{item.packPrice}</td>
-                                            <td style={{ textAlign: 'right', padding: '0.5rem', fontWeight: 600 }}>₹{item.total.toFixed(2)}</td>
+                            {/* Items */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Items</h3>
+                                <table style={{ width: '100%', fontSize: '0.875rem' }}>
+                                    <thead>
+                                        <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                                            <th style={{ textAlign: 'left', padding: '0.5rem' }}>Product</th>
+                                            <th style={{ textAlign: 'center', padding: '0.5rem' }}>Packaging</th>
+                                            <th style={{ textAlign: 'center', padding: '0.5rem' }}>Cartons</th>
+                                            <th style={{ textAlign: 'right', padding: '0.5rem' }}>Pack Price</th>
+                                            <th style={{ textAlign: 'right', padding: '0.5rem' }}>Total</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {selectedBill.items.map((item, index) => (
+                                            <tr key={index} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                                <td style={{ padding: '0.5rem' }}>{item.name}</td>
+                                                <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                                                    <span className="badge badge-info">{item.packaging}</span>
+                                                </td>
+                                                <td style={{ textAlign: 'center', padding: '0.5rem' }}>{item.cartonsOrdered}</td>
+                                                <td style={{ textAlign: 'right', padding: '0.5rem' }}>₹{item.packPrice}</td>
+                                                <td style={{ textAlign: 'right', padding: '0.5rem', fontWeight: 600 }}>₹{item.total.toFixed(2)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                        {/* Bill Summary */}
-                        <div style={{ borderTop: '2px solid var(--border-color)', paddingTop: '1rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                <span>Subtotal:</span>
-                                <span>₹{selectedBill.subtotal.toFixed(2)}</span>
+                            {/* Bill Summary */}
+                            <div style={{ borderTop: '2px solid var(--border-color)', paddingTop: '1rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <span>Subtotal:</span>
+                                    <span>₹{selectedBill.subtotal.toFixed(2)}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <span>GST (18%):</span>
+                                    <span>₹{selectedBill.gst.toFixed(2)}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <span>Discount:</span>
+                                    <span>-₹{selectedBill.discount.toFixed(2)}</span>
+                                </div>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    fontSize: '1.25rem',
+                                    fontWeight: 700,
+                                    marginTop: '0.75rem',
+                                    paddingTop: '0.75rem',
+                                    borderTop: '1px solid var(--border-color)'
+                                }}>
+                                    <span>Total Amount:</span>
+                                    <span style={{ color: 'var(--success-color)' }}>₹{selectedBill.totalAmount.toFixed(2)}</span>
+                                </div>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                <span>GST (18%):</span>
-                                <span>₹{selectedBill.gst.toFixed(2)}</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                <span>Discount:</span>
-                                <span>-₹{selectedBill.discount.toFixed(2)}</span>
-                            </div>
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                fontSize: '1.25rem',
-                                fontWeight: 700,
-                                marginTop: '0.75rem',
-                                paddingTop: '0.75rem',
-                                borderTop: '1px solid var(--border-color)'
-                            }}>
-                                <span>Total Amount:</span>
-                                <span style={{ color: 'var(--success-color)' }}>₹{selectedBill.totalAmount.toFixed(2)}</span>
-                            </div>
-                        </div>
 
-                        {/* Payment Information */}
-                        <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '0.5rem' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                <div><strong>Payment Method:</strong> {selectedBill.paymentMethod}</div>
-                                <div><strong>Status:</strong> {getStatusBadge(selectedBill.paymentStatus)}</div>
+                            {/* Payment Information */}
+                            <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '0.5rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                    <div><strong>Payment Method:</strong> {selectedBill.paymentMethod}</div>
+                                    <div><strong>Status:</strong> {selectedBill.paymentStatus}</div>
+                                </div>
                             </div>
                         </div>
 
                         <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
                             <button className="btn btn-primary" onClick={() => window.print()}>
                                 Print Bill
+                            </button>
+                            <button className="btn btn-success" onClick={downloadAsPDF}>
+                                Download PDF
                             </button>
                             <button className="btn" onClick={closeBillDetails}>
                                 Close

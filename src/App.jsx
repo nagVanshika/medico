@@ -10,6 +10,8 @@ import Billing from './pages/Billing';
 import Sales from './pages/Sales';
 import Alerts from './pages/Alerts';
 import Predictions from './pages/Predictions';
+import CustomerLedger from './pages/CustomerLedger';
+import ProductSales from './pages/ProductSales';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -105,6 +107,28 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <Layout>
               <Predictions />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/ledger"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CustomerLedger />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/product-sales"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ProductSales />
             </Layout>
           </ProtectedRoute>
         }

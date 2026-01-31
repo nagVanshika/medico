@@ -12,6 +12,8 @@ const Stock = () => {
     const [categoryFilter, setCategoryFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [sortBy, setSortBy] = useState(''); // New sort state
+    const [editModal, setEditModal] = useState({ show: false, stock: null });
+    const [updateLoading, setUpdateLoading] = useState(false);
 
     useEffect(() => {
         fetchStocks();
@@ -91,6 +93,46 @@ const Stock = () => {
                 console.error('Error deleting stock:', error);
                 alert('Failed to delete stock item');
             }
+        }
+    };
+
+    const handleEdit = (stock) => {
+        setEditModal({
+            show: true,
+            stock: {
+                ...stock,
+                expiryDate: new Date(stock.expiryDate).toISOString().split('T')[0] // Format for date input
+            }
+        });
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        setUpdateLoading(true);
+        try {
+            const { _id, ...updateData } = editModal.stock;
+            // Ensure numeric fields are numbers
+            const processedData = {
+                ...updateData,
+                unitsPerPack: Number(updateData.unitsPerPack),
+                packsPerCarton: Number(updateData.packsPerCarton),
+                quantityInCartons: Number(updateData.quantityInCartons),
+                packCostPrice: Number(updateData.packCostPrice),
+                packSellingPrice: Number(updateData.packSellingPrice)
+            };
+
+            await axios.put(`http://localhost:5001/api/stock/${_id}`, processedData);
+            setEditModal({ show: false, stock: null });
+            fetchStocks();
+            alert('Stock updated successfully');
+        } catch (error) {
+            console.error('Error updating stock:', error);
+            const msg = error.response?.data?.errors
+                ? error.response.data.errors.join(', ')
+                : (error.response?.data?.message || 'Failed to update stock');
+            alert(msg);
+        } finally {
+            setUpdateLoading(false);
         }
     };
 
@@ -211,6 +253,16 @@ const Stock = () => {
                                         <td>
                                             {canEdit() ? (
                                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                    {stock.status !== 'Out of Stock' && (
+                                                        <button
+                                                            className="btn btn-primary"
+                                                            style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}
+                                                            onClick={() => handleEdit(stock)}
+                                                            title="Edit Details"
+                                                        >
+                                                            <Edit size={14} />
+                                                        </button>
+                                                    )}
                                                     <button
                                                         className="btn btn-danger"
                                                         style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}
@@ -230,6 +282,110 @@ const Stock = () => {
                     </table>
                 </div>
             </div>
+
+            {editModal.show && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxWidth: '600px' }}>
+                        <div className="modal-header">
+                            <h2>Edit Stock Item</h2>
+                            <button className="close-btn" onClick={() => setEditModal({ show: false, stock: null })}>×</button>
+                        </div>
+                        <form onSubmit={handleUpdate}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div className="input-group">
+                                    <label>Product Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editModal.stock.name}
+                                        onChange={(e) => setEditModal({ ...editModal, stock: { ...editModal.stock, name: e.target.value } })}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Category</label>
+                                    <select
+                                        value={editModal.stock.category}
+                                        onChange={(e) => setEditModal({ ...editModal, stock: { ...editModal.stock, category: e.target.value } })}
+                                    >
+                                        <option value="Medicine">Medicine</option>
+                                        <option value="Equipment">Equipment</option>
+                                        <option value="Consumables">Consumables</option>
+                                        <option value="Surgical">Surgical</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div className="input-group">
+                                    <label>Manufacturer</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editModal.stock.manufacturer}
+                                        onChange={(e) => setEditModal({ ...editModal, stock: { ...editModal.stock, manufacturer: e.target.value } })}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Batch Number</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editModal.stock.batchNumber}
+                                        onChange={(e) => setEditModal({ ...editModal, stock: { ...editModal.stock, batchNumber: e.target.value } })}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Expiry Date</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        value={editModal.stock.expiryDate}
+                                        onChange={(e) => setEditModal({ ...editModal, stock: { ...editModal.stock, expiryDate: e.target.value } })}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Quantity (Cartons)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="0"
+                                        value={editModal.stock.quantityInCartons}
+                                        onChange={(e) => setEditModal({ ...editModal, stock: { ...editModal.stock, quantityInCartons: e.target.value } })}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Pack Cost Price (₹)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="0"
+                                        step="0.01"
+                                        value={editModal.stock.packCostPrice}
+                                        onChange={(e) => setEditModal({ ...editModal, stock: { ...editModal.stock, packCostPrice: e.target.value } })}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>Pack Selling Price (₹)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="0"
+                                        step="0.01"
+                                        value={editModal.stock.packSellingPrice}
+                                        onChange={(e) => setEditModal({ ...editModal, stock: { ...editModal.stock, packSellingPrice: e.target.value } })}
+                                    />
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                                <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setEditModal({ show: false, stock: null })}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={updateLoading}>
+                                    {updateLoading ? 'Updating...' : 'Update Stock'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -36,7 +36,18 @@ const AddStock = () => {
         setMessage({ type: '', text: '' });
 
         try {
-            await axios.post('http://localhost:5001/api/stock', formData);
+            // Ensure numeric fields are sent as numbers
+            const dataToSend = {
+                ...formData,
+                unitsPerPack: Number(formData.unitsPerPack),
+                packsPerCarton: Number(formData.packsPerCarton),
+                quantityInCartons: Number(formData.quantityInCartons),
+                packCostPrice: Number(formData.packCostPrice),
+                packSellingPrice: Number(formData.packSellingPrice),
+                reorderLevel: Number(formData.reorderLevel)
+            };
+
+            await axios.post('http://localhost:5001/api/stock', dataToSend);
             setMessage({ type: 'success', text: 'Stock item added successfully!' });
 
             // Reset form
@@ -61,7 +72,14 @@ const AddStock = () => {
             }, 1500);
         } catch (error) {
             console.error('Error adding stock:', error);
-            setMessage({ type: 'error', text: 'Failed to add stock item. Please try again.' });
+            const serverMessage = error.response?.data?.errors
+                ? error.response.data.errors.join(', ')
+                : (error.response?.data?.message || 'Failed to add stock item. Please try again.');
+
+            setMessage({
+                type: 'error',
+                text: serverMessage
+            });
         } finally {
             setLoading(false);
         }

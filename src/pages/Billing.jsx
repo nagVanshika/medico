@@ -100,15 +100,21 @@ const Billing = () => {
             return;
         }
 
+        if (!/^\d{10}$/.test(customerInfo.customerPhone)) {
+            setMessage({ type: 'error', text: 'Please enter a valid 10-digit mobile number' });
+            return;
+        }
+
         setLoading(true);
         setMessage({ type: '', text: '' });
 
         try {
             const billData = {
                 ...customerInfo,
+                discount: Number(customerInfo.discount) || 0,
                 items: cart.map(item => ({
                     stockId: item.stockId,
-                    cartonsOrdered: item.cartonsOrdered
+                    cartonsOrdered: Number(item.cartonsOrdered)
                 }))
             };
 
@@ -122,16 +128,22 @@ const Billing = () => {
                 customerPhone: '',
                 customerAddress: '',
                 paymentMethod: 'Cash',
-                discount: 0
+                discount: 0,
+                amountPaid: ''
             });
 
             fetchStocks(); // Refresh stock list
         } catch (error) {
             console.error('Error creating bill:', error);
+            const serverMessage = error.response?.data?.errors
+                ? error.response.data.errors.join(', ')
+                : (error.response?.data?.message || 'Failed to create bill');
+
             setMessage({
                 type: 'error',
-                text: error.response?.data?.message || 'Failed to create bill'
+                text: serverMessage
             });
+            fetchStocks(); // Refresh stock list even on failure to stay in sync
         } finally {
             setLoading(false);
         }
@@ -302,7 +314,14 @@ const Billing = () => {
                                 <input
                                     type="tel"
                                     value={customerInfo.customerPhone}
-                                    onChange={(e) => setCustomerInfo({ ...customerInfo, customerPhone: e.target.value })}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '');
+                                        if (val.length <= 10) {
+                                            setCustomerInfo({ ...customerInfo, customerPhone: val });
+                                        }
+                                    }}
+                                    maxLength={10}
+                                    placeholder="10-digit mobile number"
                                     required
                                     disabled={!canEdit()}
                                 />
@@ -341,6 +360,19 @@ const Billing = () => {
                                     step="0.01"
                                     value={customerInfo.discount}
                                     onChange={(e) => setCustomerInfo({ ...customerInfo, discount: parseFloat(e.target.value) || 0 })}
+                                    disabled={!canEdit()}
+                                />
+                            </div>
+
+                            <div className="input-group">
+                                <label>Amount Paid (₹)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={customerInfo.amountPaid || ''}
+                                    onChange={(e) => setCustomerInfo({ ...customerInfo, amountPaid: e.target.value })}
+                                    placeholder="Leave empty for pending"
                                     disabled={!canEdit()}
                                 />
                             </div>

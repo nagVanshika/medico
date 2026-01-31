@@ -10,7 +10,9 @@ import {
     Bell,
     TrendingUp,
     LogOut,
-    User
+    User,
+    History,
+    BarChart3
 } from 'lucide-react';
 import './Layout.css';
 
@@ -32,6 +34,8 @@ const Layout = ({ children }) => {
         { path: '/sales', icon: FileText, label: 'Sales Reports' },
         { path: '/alerts', icon: Bell, label: 'Alerts' },
         { path: '/predictions', icon: TrendingUp, label: 'Predictions' },
+        { path: '/ledger', icon: History, label: 'Customer Ledger' },
+        { path: '/product-sales', icon: BarChart3, label: 'Product Sales' },
     ];
 
     // Filter nav items based on user role
