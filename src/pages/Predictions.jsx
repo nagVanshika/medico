@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { TrendingUp, Package, BarChart3 } from 'lucide-react';
+import { TrendingUp, Package, BarChart3, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Predictions = () => {
     const [salesTrend, setSalesTrend] = useState([]);
     const [topSelling, setTopSelling] = useState([]);
     const [reorderSuggestions, setReorderSuggestions] = useState([]);
+    const [outbreaks, setOutbreaks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -15,15 +16,17 @@ const Predictions = () => {
 
     const fetchPredictions = async () => {
         try {
-            const [salesRes, topSellingRes, reorderRes] = await Promise.all([
+            const [salesRes, topSellingRes, reorderRes, outbreaksRes] = await Promise.all([
                 axios.get('http://localhost:5001/api/predictions/sales-trend?days=30'),
                 axios.get('http://localhost:5001/api/predictions/top-selling?limit=10'),
-                axios.get('http://localhost:5001/api/predictions/reorder-suggestions')
+                axios.get('http://localhost:5001/api/predictions/reorder-suggestions'),
+                axios.get('http://localhost:5001/api/news/outbreaks')
             ]);
 
             setSalesTrend(salesRes.data.data);
             setTopSelling(topSellingRes.data.data);
             setReorderSuggestions(reorderRes.data.data);
+            setOutbreaks(outbreaksRes.data.data);
         } catch (error) {
             console.error('Error fetching predictions:', error);
         } finally {
@@ -172,6 +175,65 @@ const Predictions = () => {
                     </div>
                 </div>
             )}
+
+            <div className="card" style={{ marginTop: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <AlertTriangle size={20} className="text-warning" />
+                    Latest Disease Outbreaks (WHO)
+                </h3>
+                <div className="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Title</th>
+                                <th style={{ minWidth: '200px' }}>Suggested Medicines</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {outbreaks.length === 0 ? (
+                                <tr>
+                                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                                        No recent outbreak data available
+                                    </td>
+                                </tr>
+                            ) : (
+                                outbreaks.map((outbreak, index) => (
+                                    <tr key={index}>
+                                        <td style={{ whiteSpace: 'nowrap' }}>
+                                            {outbreak.PublicationDate ? new Date(outbreak.PublicationDate).toLocaleDateString() : 'N/A'}
+                                        </td>
+                                        <td style={{ fontWeight: 600 }}>{outbreak.Title}</td>
+                                        <td>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                                                {outbreak.suggestedMedicines.map((med, i) => (
+                                                    <span key={i} className="badge badge-success" style={{ fontSize: '0.75rem' }}>
+                                                        {med}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td style={{ fontSize: '0.875rem' }}>
+                                            {outbreak.Introduction ? outbreak.Introduction.substring(0, 150) + '...' : 'No description available'}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                <div style={{ marginTop: '1rem', textAlign: 'right' }}>
+                    <a
+                        href="https://www.who.int/emergencies/disease-outbreak-news"
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ fontSize: '0.875rem', color: 'var(--primary-color)', textDecoration: 'underline' }}
+                    >
+                        View all on WHO website
+                    </a>
+                </div>
+            </div>
         </div>
     );
 };
