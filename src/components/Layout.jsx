@@ -12,7 +12,8 @@ import {
     LogOut,
     User,
     History,
-    BarChart3
+    BarChart3,
+    Users as UsersIcon
 } from 'lucide-react';
 import './Layout.css';
 
@@ -36,6 +37,7 @@ const Layout = ({ children }) => {
         { path: '/predictions', icon: TrendingUp, label: 'Predictions' },
         { path: '/ledger', icon: History, label: 'Customer Ledger' },
         { path: '/product-sales', icon: BarChart3, label: 'Product Sales' },
+        { path: '/users', icon: UsersIcon, label: 'Users', adminOnly: true },
     ];
 
     // Filter nav items based on user role
@@ -76,13 +78,15 @@ const Layout = ({ children }) => {
                     </div>
                     <button onClick={handleLogout} className="btn-logout">
                         <LogOut size={18} />
-                        Logout
+                        <span>Logout</span>
                     </button>
                 </div>
             </aside>
 
             <main className="main-content">
-                {children}
+                <div className="main-container">
+                    {children}
+                </div>
             </main>
         </div>
     );

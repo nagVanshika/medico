@@ -11,10 +11,24 @@ const Alerts = () => {
     const [emailAddress, setEmailAddress] = useState('');
     const [sendingEmail, setSendingEmail] = useState(false);
     const [emailMessage, setEmailMessage] = useState({ type: '', text: '' });
+    const [users, setUsers] = useState([]);
 
     useEffect(() => {
         fetchAlerts();
+        fetchUsers();
     }, []);
+
+    const fetchUsers = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:5001/api/users', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setUsers(response.data.data);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    };
 
     const fetchAlerts = async () => {
         try {
@@ -199,15 +213,26 @@ const Alerts = () => {
                         </p>
 
                         <div className="input-group" style={{ marginBottom: '1rem' }}>
-                            <label>Email Address</label>
-                            <input
-                                type="email"
-                                placeholder="recipient@example.com"
+                            <label>Select Recipient</label>
+                            <select
                                 value={emailAddress}
                                 onChange={(e) => setEmailAddress(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSendEmail()}
                                 disabled={sendingEmail}
-                            />
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    borderRadius: '0.5rem',
+                                    border: '1px solid var(--border-color)',
+                                    backgroundColor: 'white'
+                                }}
+                            >
+                                <option value="">-- Choose a user --</option>
+                                {users.map(user => (
+                                    <option key={user._id} value={user.email}>
+                                        {user.name} ({user.role})
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         {emailMessage.text && (

@@ -12,13 +12,19 @@ import Alerts from './pages/Alerts';
 import Predictions from './pages/Predictions';
 import CustomerLedger from './pages/CustomerLedger';
 import ProductSales from './pages/ProductSales';
+import Users from './pages/Users';
+import ChangePassword from './pages/ChangePassword';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return <div className="spinner"></div>;
+  }
+
+  if (isAuthenticated && user?.mustChangePassword && window.location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" replace />;
   }
 
   return isAuthenticated ? children : <Navigate to="/" replace />;
@@ -124,13 +130,20 @@ const AppRoutes = () => {
       />
 
       <Route
-        path="/product-sales"
+        path="/users"
         element={
           <ProtectedRoute>
             <Layout>
-              <ProductSales />
+              <Users />
             </Layout>
           </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/change-password"
+        element={
+          isAuthenticated ? <ChangePassword /> : <Navigate to="/" replace />
         }
       />
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { TrendingUp, Package, BarChart3, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Package, BarChart3, AlertTriangle, Search, Loader, Brain } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Predictions = () => {
@@ -10,8 +10,15 @@ const Predictions = () => {
     const [outbreaks, setOutbreaks] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // LSTM States
+    const [medicineSearch, setMedicineSearch] = useState('');
+    const [lstmPrediction, setLstmPrediction] = useState(null);
+    const [lstmLoading, setLstmLoading] = useState(false);
+    const [lstmError, setLstmError] = useState('');
+
     useEffect(() => {
         fetchPredictions();
+        fetchLSTMPrediction();
     }, []);
 
     const fetchPredictions = async () => {
@@ -31,6 +38,28 @@ const Predictions = () => {
             console.error('Error fetching predictions:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchLSTMPrediction = async () => {
+        setLstmLoading(true);
+        setLstmError('');
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post('http://localhost:5001/api/predictions/lstm-demand',
+                {}, // Pass empty object to fetch all
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (res.data.success) {
+                setLstmPrediction(res.data.results);
+            } else {
+                setLstmError(res.data.error || 'Failed to get predictions');
+            }
+        } catch (error) {
+            setLstmError(error.response?.data?.message || 'Error fetching automated predictions');
+        } finally {
+            setLstmLoading(false);
         }
     };
 
@@ -175,6 +204,90 @@ const Predictions = () => {
                     </div>
                 </div>
             )}
+
+            <div className="card" style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Brain size={20} className="text-primary" />
+                    LSTM Month-wise Demand Forecasting
+                </h3>
+
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                        <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <input
+                            type="text"
+                            placeholder="Filter medicines..."
+                            value={medicineSearch}
+                            onChange={(e) => setMedicineSearch(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem 1rem 0.75rem 2.5rem',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '0.5rem',
+                                outline: 'none'
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {lstmError && (
+                    <div style={{ padding: '1rem', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '0.5rem', color: '#b91c1c', marginBottom: '1rem' }}>
+                        {lstmError}
+                    </div>
+                )}
+
+                {lstmLoading ? (
+                    <div style={{ textAlign: 'center', padding: '3rem' }}>
+                        <Loader size={32} className="animate-spin" style={{ color: 'var(--primary-color)', margin: '0 auto' }} />
+                        <p style={{ marginTop: '1rem', color: '#64748b' }}>Generating AI Demand Forecasts...</p>
+                    </div>
+                ) : Array.isArray(lstmPrediction) ? (
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Medicine Name</th>
+                                    <th>Current Demand</th>
+                                    <th>Predicted Demand</th>
+                                    <th style={{ textAlign: 'center' }}>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {lstmPrediction
+                                    .filter(med => med.name.toLowerCase().includes(medicineSearch.toLowerCase()))
+                                    .map((med, index) => (
+                                        <tr key={index}>
+                                            <td style={{ fontWeight: 600 }}>{med.name}</td>
+                                            <td>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontWeight: 600, color: '#1e293b' }}>{Math.round(med.thisMonth.value)} units</span>
+                                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{med.thisMonth.label}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontWeight: 600, color: '#059669' }}>{Math.round(med.nextMonth.value)} units</span>
+                                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{med.nextMonth.label}</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                {med.nextMonth.value > med.thisMonth.value ? (
+                                                    <span className="badge badge-warning" style={{ fontSize: '0.75rem' }}>Increasing Demand</span>
+                                                ) : (
+                                                    <span className="badge badge-success" style={{ fontSize: '0.75rem' }}>Stable/Lower</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b', border: '2px dashed #e2e8f0', borderRadius: '0.5rem' }}>
+                        No demand predictions available at the moment.
+                    </div>
+                )}
+            </div>
 
             <div className="card" style={{ marginTop: '1.5rem' }}>
                 <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
