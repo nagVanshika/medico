@@ -141,6 +141,17 @@ const AppRoutes = () => {
       />
 
       <Route
+        path="/product-sales"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ProductSales />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/change-password"
         element={
           isAuthenticated ? <ChangePassword /> : <Navigate to="/" replace />
