@@ -122,6 +122,8 @@ const Sales = () => {
             'GST (18%)': `₹${bill.gst.toFixed(2)}`,
             'Discount': `₹${bill.discount.toFixed(2)}`,
             'Total Amount': `₹${bill.totalAmount.toFixed(2)}`,
+            'Paid Amount': `₹${(bill.paidAmount || 0).toFixed(2)}`,
+            'Remaining Balance': `₹${(bill.totalAmount - (bill.paidAmount || 0)).toFixed(2)}`,
             'Payment Method': bill.paymentMethod,
             'Payment Status': bill.paymentStatus
         }));
@@ -267,7 +269,19 @@ const Sales = () => {
                 <div className="card" style={{ padding: '1rem' }}>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>GST Collected</div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-                        ₹{filteredBills.reduce((sum, bill) => sum + bill.gst, 0).toFixed(2)}
+                        ₹{filteredBills.reduce((sum, bill) => sum + (bill.gst || 0), 0).toFixed(2)}
+                    </div>
+                </div>
+                <div className="card" style={{ padding: '1rem' }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Total Paid</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--success-color)' }}>
+                        ₹{filteredBills.reduce((sum, bill) => sum + (bill.paidAmount || 0), 0).toFixed(2)}
+                    </div>
+                </div>
+                <div className="card" style={{ padding: '1rem' }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Total Pending</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--danger-color)' }}>
+                        ₹{filteredBills.reduce((sum, bill) => sum + (bill.totalAmount - (bill.paidAmount || 0)), 0).toFixed(2)}
                     </div>
                 </div>
             </div>
@@ -443,6 +457,14 @@ const Sales = () => {
                                 }}>
                                     <span>Total Amount:</span>
                                     <span style={{ color: 'var(--success-color)' }}>₹{selectedBill.totalAmount.toFixed(2)}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', color: 'var(--success-color)' }}>
+                                    <span style={{ fontWeight: 600 }}>Paid Amount:</span>
+                                    <span style={{ fontWeight: 600 }}>₹{selectedBill.paidAmount?.toFixed(2) || '0.00'}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', color: 'var(--danger-color)' }}>
+                                    <span style={{ fontWeight: 600 }}>Remaining Balance:</span>
+                                    <span style={{ fontWeight: 600 }}>₹{(selectedBill.totalAmount - (selectedBill.paidAmount || 0)).toFixed(2)}</span>
                                 </div>
                             </div>
 
