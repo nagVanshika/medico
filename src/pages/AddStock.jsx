@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Package } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const AddStock = () => {
+    const { canEdit } = useAuth();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: '',
@@ -325,7 +327,7 @@ const AddStock = () => {
                     )}
 
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                        <button type="submit" className="btn btn-primary" disabled={loading}>
+                        <button type="submit" className="btn btn-primary" disabled={loading || !canEdit()}>
                             <Package size={18} />
                             {loading ? 'Adding...' : 'Add Stock'}
                         </button>

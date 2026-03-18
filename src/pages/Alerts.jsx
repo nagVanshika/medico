@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { AlertTriangle, AlertCircle, XCircle, Clock, Mail, X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Alerts = () => {
+    const { canEdit } = useAuth();
     const [alerts, setAlerts] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
@@ -157,14 +159,16 @@ const Alerts = () => {
                     <h1>Alerts & Notifications</h1>
                     <p>Monitor stock levels and expiry dates</p>
                 </div>
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setShowEmailModal(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                >
-                    <Mail size={18} />
-                    Send Email Alert
-                </button>
+                {canEdit() && (
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => setShowEmailModal(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <Mail size={18} />
+                        Send Email Alert
+                    </button>
+                )}
             </div>
 
             {/* Email Modal */}

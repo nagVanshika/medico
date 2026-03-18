@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const canEdit = () => {
-        return user?.role === 'admin';
+        return user?.role === 'admin' || user?.role === 'manager';
     };
 
     const value = {

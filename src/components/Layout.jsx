@@ -18,7 +18,7 @@ import {
 import './Layout.css';
 
 const Layout = ({ children }) => {
-    const { user, logout, isAdmin } = useAuth();
+    const { user, logout, isAdmin, canEdit } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -30,18 +30,18 @@ const Layout = ({ children }) => {
     const navItems = [
         { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/stock', icon: Package, label: 'View Stock' },
-        { path: '/add-stock', icon: PlusCircle, label: 'Add Stock', adminOnly: true },
+        { path: '/add-stock', icon: PlusCircle, label: 'Add Stock', restricted: true },
         { path: '/billing', icon: Receipt, label: 'Billing' },
         { path: '/sales', icon: FileText, label: 'Sales Reports' },
         { path: '/alerts', icon: Bell, label: 'Alerts' },
         { path: '/predictions', icon: TrendingUp, label: 'Predictions' },
         { path: '/ledger', icon: History, label: 'Customer Ledger' },
         { path: '/product-sales', icon: BarChart3, label: 'Product Sales' },
-        { path: '/users', icon: UsersIcon, label: 'Users', adminOnly: true },
+        { path: '/users', icon: UsersIcon, label: 'Users', restricted: true },
     ];
 
     // Filter nav items based on user role
-    const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin());
+    const visibleNavItems = navItems.filter(item => !item.restricted || canEdit());
 
     return (
         <div className="layout">

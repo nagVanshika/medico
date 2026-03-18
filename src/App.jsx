@@ -16,18 +16,27 @@ import Users from './pages/Users';
 import ChangePassword from './pages/ChangePassword';
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, requiredRoles = [] }) => {
   const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return <div className="spinner"></div>;
   }
 
-  if (isAuthenticated && user?.mustChangePassword && window.location.pathname !== '/change-password') {
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (user?.mustChangePassword && window.location.pathname !== '/change-password') {
     return <Navigate to="/change-password" replace />;
   }
 
-  return isAuthenticated ? children : <Navigate to="/" replace />;
+  // Check role if requiredRoles are specified
+  if (requiredRoles.length > 0 && !requiredRoles.includes(user?.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 };
 
 // App Routes
@@ -66,7 +75,7 @@ const AppRoutes = () => {
       <Route
         path="/add-stock"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager']}>
             <Layout>
               <AddStock />
             </Layout>
@@ -132,7 +141,7 @@ const AppRoutes = () => {
       <Route
         path="/users"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager']}>
             <Layout>
               <Users />
             </Layout>

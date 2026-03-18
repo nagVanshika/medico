@@ -228,6 +228,7 @@ const Billing = () => {
                                                 <button
                                                     onClick={() => removeFromCart(item.stockId)}
                                                     style={{ padding: '0.25rem', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--danger-color)' }}
+                                                    disabled={!canEdit()}
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
@@ -242,6 +243,7 @@ const Billing = () => {
                                                 <button
                                                     onClick={() => updateQuantity(item.stockId, item.cartonsOrdered - 1)}
                                                     style={{ padding: '0.25rem 0.5rem', border: '1px solid var(--border-color)', background: 'white', cursor: 'pointer', borderRadius: '0.25rem' }}
+                                                    disabled={!canEdit()}
                                                 >
                                                     <Minus size={14} />
                                                 </button>
@@ -249,6 +251,7 @@ const Billing = () => {
                                                 <button
                                                     onClick={() => updateQuantity(item.stockId, item.cartonsOrdered + 1)}
                                                     style={{ padding: '0.25rem 0.5rem', border: '1px solid var(--border-color)', background: 'white', cursor: 'pointer', borderRadius: '0.25rem' }}
+                                                    disabled={!canEdit()}
                                                 >
                                                     <Plus size={14} />
                                                 </button>
